@@ -5,16 +5,7 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
-import java.nio.file.FileSystems;
-import java.nio.file.Paths;
 import java.util.Scanner;
-
-
-
-
-
-
-
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -77,10 +68,10 @@ public class SimpleGUI extends JFrame implements ActionListener {
 
 	private void initImageIcons() {
 		try{
-		targetImg = new ImageIcon("C:\\Users\\Abbas\\blocks\\app\\res\\images\\Target.png");
-		verticalImg = new ImageIcon("C:\\Users\\Abbas\\blocks\\app\\res\\images\\VerticalBlock.png");
-		horizontalImg = new ImageIcon("C:\\Users\\Abbas\\blocks\\app\\res\\images\\HorizontalBlock.png");
-		emptyImg = new ImageIcon("C:\\Users\\Abbas\\blocks\\app\\res\\images\\EmptyCell.png");
+		targetImg = new ImageIcon("res/images/Target.png");
+		verticalImg = new ImageIcon("res/images/VerticalBlock.png");
+		horizontalImg = new ImageIcon("res/images/HorizontalBlock.png");
+		emptyImg = new ImageIcon("res/images/EmptyCell.png");
 		}
 		catch(Exception e){
 			System.out.println(e);
@@ -167,7 +158,6 @@ public class SimpleGUI extends JFrame implements ActionListener {
 						throw new IllegalStateException();
 					board.placeBlockAt(new TargetBlock(), row, col);
 					targetCol = col;
-					
 					break;	
 				default:
 					break;
@@ -187,8 +177,7 @@ public class SimpleGUI extends JFrame implements ActionListener {
 	private char [][] loadPuzzle(){
 		char map[][] = null;
 		try {
-			//System.out.println(getClass().getClassLoader().getResource("./classpath"));
-			Scanner inFile = new Scanner(new FileReader("C:\\Users\\Abbas\\blocks\\app\\res\\puzzles\\puzzle-000.txt"));
+			Scanner inFile = new Scanner(new FileReader("res/puzzles/puzzle-000.txt"));
 			String strLine[]=inFile.nextLine().split("\\s+");
 			NUM_ROWS = Integer.parseInt(strLine[0]);
 			NUM_COLS = Integer.parseInt(strLine[1]);
@@ -197,12 +186,12 @@ public class SimpleGUI extends JFrame implements ActionListener {
 			map = new char[NUM_ROWS][NUM_COLS];
 			int i=0;
 			while(inFile.hasNextLine())
-				{
-				   map[i]= inFile.nextLine().toCharArray();
-				   i++;
-				}
+			{
+			   map[i]= inFile.nextLine().toCharArray();
+			   i++;
+			}
 		} catch (Exception e) {
-			System.out.println(e);
+			System.err.println(e);
 		}
 		return map;
 	}
@@ -210,11 +199,6 @@ public class SimpleGUI extends JFrame implements ActionListener {
 	// Update display based on the state of the board...
 	// TODO: make this more efficient
 	private void updateUI() {
-		/*String targetImgPath = "C:\\Users\\Abbas\\blocks\\app\\res\\images\\Target.png";
-		String verticalImgPath = "C:\\Users\\Abbas\\blocks\\app\\res\\images\\VerticalBlock.png";
-		String horizontalImgPath = "C:\\Users\\Abbas\\blocks\\app\\res\\images\\HorizontalBlock.png";
-		String emptyImgPath = "C:\\Users\\Abbas\\blocks\\app\\res\\images\\EmptyCell.png";
-		*/
 		for (int row = 0; row < NUM_ROWS; row++) {
 			for (int col = 0; col < NUM_COLS; col++) {
 				Block block = board.getBlockAt(row, col);
