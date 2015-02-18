@@ -1,11 +1,22 @@
 package pt314.blocks.gui;
 
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.*;
+import java.nio.file.FileSystems;
+import java.nio.file.Paths;
+import java.util.Scanner;
 
+
+
+
+
+
+
+
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -25,8 +36,8 @@ import pt314.blocks.game.VerticalBlock;
  */
 public class SimpleGUI extends JFrame implements ActionListener {
 
-	private static final int NUM_ROWS = 5;
-	private static final int NUM_COLS = 5;
+	private static  int NUM_ROWS;
+	private static  int NUM_COLS;
 
 	private GameBoard board;
 	
@@ -43,16 +54,37 @@ public class SimpleGUI extends JFrame implements ActionListener {
 	private JMenuItem exitMenuItem;
 	private JMenuItem aboutMenuItem;
 	
+	// image icons for blocks
+	private ImageIcon targetImg;
+	private ImageIcon verticalImg;
+	private ImageIcon horizontalImg;
+	private ImageIcon emptyImg;
+	
 	public SimpleGUI() {
 		super("Blocks");
 		
 		initMenus();
 		
+		initImageIcons();
+		
 		initBoard();
 		
 		pack();
 		setVisible(true);
+		setResizable(false);
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+	}
+
+	private void initImageIcons() {
+		try{
+		targetImg = new ImageIcon("C:\\Users\\Abbas\\blocks\\app\\res\\images\\Target.png");
+		verticalImg = new ImageIcon("C:\\Users\\Abbas\\blocks\\app\\res\\images\\VerticalBlock.png");
+		horizontalImg = new ImageIcon("C:\\Users\\Abbas\\blocks\\app\\res\\images\\HorizontalBlock.png");
+		emptyImg = new ImageIcon("C:\\Users\\Abbas\\blocks\\app\\res\\images\\EmptyCell.png");
+		}
+		catch(Exception e){
+			System.out.println(e);
+		}
 	}
 
 	private void initMenus() {
@@ -68,7 +100,7 @@ public class SimpleGUI extends JFrame implements ActionListener {
 		newGameMenuItem.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JOptionPane.showMessageDialog(SimpleGUI.this, "Coming soon...");
+				initBoard();
 			}
 		});
 		gameMenu.add(newGameMenuItem);
@@ -97,10 +129,18 @@ public class SimpleGUI extends JFrame implements ActionListener {
 	}
 	
 	private void initBoard() {
+		getContentPane().removeAll();
+		
+		char [][] map = loadPuzzle();
 		board = new GameBoard(NUM_COLS, NUM_ROWS);
 		buttonGrid = new GridButton[NUM_ROWS][NUM_COLS];
 		
 		setLayout(new GridLayout(NUM_ROWS, NUM_COLS));
+		
+		int targetRow = NUM_ROWS/2;
+		int targetCol = NUM_COLS-1;
+		int HorizontalBlockCol = 0;
+		int targetCount = 0;
 		for (int row = 0; row < NUM_ROWS; row++) {
 			for (int col = 0; col < NUM_COLS; col++) {
 				GridButton cell = new GridButton(row, col);
@@ -109,34 +149,84 @@ public class SimpleGUI extends JFrame implements ActionListener {
 				cell.setOpaque(true);
 				buttonGrid[row][col] = cell;
 				add(cell);
+				
+				switch (map[row][col]) {
+				case 'H':
+					if(row == targetRow && col>= targetCol)
+						throw new IllegalStateException();
+					board.placeBlockAt(new HorizontalBlock(), row, col);
+					if(row == targetRow)
+						HorizontalBlockCol = col;
+					break;
+				case 'V':
+					board.placeBlockAt(new VerticalBlock(), row, col);
+					break;	
+				case 'T':
+					targetCount++;
+					if(row != targetRow || col < HorizontalBlockCol || targetCount > 1)
+						throw new IllegalStateException();
+					board.placeBlockAt(new TargetBlock(), row, col);
+					targetCol = col;
+					
+					break;	
+				default:
+					break;
+				}
 			}
 		}
-		
-		// add some blocks for testing...
-		board.placeBlockAt(new HorizontalBlock(), 0, 0);
-		board.placeBlockAt(new HorizontalBlock(), 4, 4);
-		board.placeBlockAt(new VerticalBlock(), 1, 3);
-		board.placeBlockAt(new VerticalBlock(), 3, 1);
-		board.placeBlockAt(new TargetBlock(), 2, 2);
-		
+			
+		if(targetCount == 0)
+			throw new IllegalStateException();
 		updateUI();
 	}
-
+	/**
+	 * Load a puzzle from a file and return two dimensional character array that represent the game map.
+	 * @throws IllegalStateException if and only if number of columns or number of rows less than 1.
+	 */
+	
+	private char [][] loadPuzzle(){
+		char map[][] = null;
+		try {
+			//System.out.println(getClass().getClassLoader().getResource("./classpath"));
+			Scanner inFile = new Scanner(new FileReader("C:\\Users\\Abbas\\blocks\\app\\res\\puzzles\\puzzle-000.txt"));
+			String strLine[]=inFile.nextLine().split("\\s+");
+			NUM_ROWS = Integer.parseInt(strLine[0]);
+			NUM_COLS = Integer.parseInt(strLine[1]);
+			if(NUM_ROWS< 1 || NUM_COLS < 1)
+				throw new IllegalStateException("NUM_ROWS = "+NUM_ROWS +" NUM_COLS"+ NUM_COLS);
+			map = new char[NUM_ROWS][NUM_COLS];
+			int i=0;
+			while(inFile.hasNextLine())
+				{
+				   map[i]= inFile.nextLine().toCharArray();
+				   i++;
+				}
+		} catch (Exception e) {
+			System.out.println(e);
+		}
+		return map;
+	}
+	
 	// Update display based on the state of the board...
 	// TODO: make this more efficient
 	private void updateUI() {
+		/*String targetImgPath = "C:\\Users\\Abbas\\blocks\\app\\res\\images\\Target.png";
+		String verticalImgPath = "C:\\Users\\Abbas\\blocks\\app\\res\\images\\VerticalBlock.png";
+		String horizontalImgPath = "C:\\Users\\Abbas\\blocks\\app\\res\\images\\HorizontalBlock.png";
+		String emptyImgPath = "C:\\Users\\Abbas\\blocks\\app\\res\\images\\EmptyCell.png";
+		*/
 		for (int row = 0; row < NUM_ROWS; row++) {
 			for (int col = 0; col < NUM_COLS; col++) {
 				Block block = board.getBlockAt(row, col);
 				JButton cell = buttonGrid[row][col];
 				if (block == null)
-					cell.setBackground(Color.LIGHT_GRAY);
+					cell.setIcon(emptyImg);
 				else if (block instanceof TargetBlock)
-					cell.setBackground(Color.YELLOW);
+					cell.setIcon(targetImg);
 				else if (block instanceof HorizontalBlock)
-					cell.setBackground(Color.BLUE);
+					cell.setIcon(horizontalImg);
 				else if (block instanceof VerticalBlock)
-					cell.setBackground(Color.RED);
+					cell.setIcon(verticalImg);
 			}
 		}
 	}
@@ -211,6 +301,15 @@ public class SimpleGUI extends JFrame implements ActionListener {
 		else {
 			selectedBlock = null;
 			updateUI();
+			if(board.getBlockAt(NUM_ROWS/2 , NUM_COLS-1) instanceof TargetBlock)
+			{
+				int dialogButton=0;
+				dialogButton = JOptionPane.showConfirmDialog (SimpleGUI.this, "Congratulation...\n You win \n Do you like to restart the game","Blocks",dialogButton);
+                if(dialogButton == JOptionPane.YES_OPTION)
+                	initBoard();
+                else
+                	System.exit(0);
+			}
 		}
 	}
 
